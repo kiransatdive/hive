@@ -1,0 +1,111 @@
+1)Start
+
+student@student22:~$ start-all.sh
+
+student@student22:~$ jps
+
+
+student@student22:~$ cd /usr/local/hive/bin
+
+student@student22:/usr/local/hive/bin$ hive
+
+hive> set hive.cli.print.current.db=true;
+
+2)Create Database
+
+hive (default)> CREATE DATABASE practice;
+
+hive (default)> Use practice;
+
+hive (practice)> create table college(
+               > FirstName STRING,
+               > ROLLNO INT);
+
+hive (practice)> SHOW TABLES;
+               
+
+hive (practice)> ALTER DATABASE practice SET DBPROPERTIES
+               > ('creator'='IT',
+               > 'created_for'='Lab');
+
+hive (practice)>  DESCRIBE DATABASE EXTENDED practice;
+
+hive (practice)>  CREATE TABLE IF NOT EXISTS FlightInfo2007
+               >   (
+               >  Year SMALLINT, Month TINYINT, DayofMonth TINYINT,
+               >  DayOfWeek TINYINT, Origin STRING, Dest STRING)
+               > COMMENT 'Flight InfoTable'
+               >     ROW FORMAT DELIMITED
+               >     FIELDS TERMINATED BY ','
+               >     STORED AS TEXTFILE
+               >     TBLPROPERTIES ('creator'='PSB ', 'created_at'='Tues Dec 5 3:00:00 EDT 2017');
+
+hive (practice)> load data local inpath '/home/student/Desktop/2007.csv' into table FlightInfo2007;
+
+
+hive (practice)> CREATE TABLE IF NOT EXISTS FlightInfo2008 LIKE FlightInfo2007;
+
+
+hive (practice)> load data local inpath '/home/student/Desktop/2008.csv' into table FlightInfo2008;
+
+
+hive (practice)> CREATE TABLE IF NOT EXISTS myFlightInfo (
+               >     Year SMALLINT, DontQueryMonth TINYINT, DayofMonth
+               >     TINYINT, DayOfWeek TINYINT,Origin STRING, Dest STRING)
+               > COMMENT 'Flight InfoTable'
+               >     PARTITIONED BY(Month TINYINT)
+               >     ROW FORMAT DELIMITED
+               >     FIELDS TERMINATED BY ','
+               >     LINES TERMINATED BY '\n'
+               > STORED AS RCFILE TBLPROPERTIES ('creator'='PSB','created_at'='Mon sep 2 14:24:19 EDT 2017');
+
+hive (practice)> SELECT Year, Month, DayofMonth, DayOfWeek,Origin,Dest FROM FlightInfo2008 WHERE Month=1;
+
+hive (practice)> FROM FlightInfo2008 INSERT INTO TABLE myflightinfo
+               > PARTITION (Month=2) SELECT Year, Month, DayofMonth, DayOfWeek,Origin, Dest WHERE Month=2
+               > INSERT INTO TABLE myflightinfo
+               > PARTITION (Month=12)
+               >  SELECT Year, Month, DayofMonth, DayOfWeek,
+               > Origin,Dest WHERE Month=12;
+
+hive (practice)> SHOW PARTITIONS myflightinfo;
+
+
+
+hive (practice)> CREATE TABLE myflightinfo2007 AS
+               > SELECT Year, Month,Origin,Dest FROM myflightinfo
+               > WHERE (Month = 7 AND DayofMonth=3) AND
+               > (Origin='JFK' AND Dest='ORD');
+
+hive (practice)> SELECT * FROM myflightinfo2007;
+
+hive (practice)> CREATE TABLE myFlightInfo2008 AS
+               > SELECT Year, Month,Origin, Dest FROM FlightInfo2008
+               > WHERE (Month = 7 AND DayofMonth = 3) AND
+               > (Origin='JFK' AND Dest='ORD');
+
+hive (practice)> SELECT * FROM myFlightInfo2008;
+
+
+hive (practice)> SELECT m8.Year, m8.Month, m8.Origin, m8.Dest, m7.Year, m7.Month, m7.Origin, m7.Dest FROM myFlightinfo2008 m8 JOIN myFlightinfo2007 m7 ON m8.Month=m7.Month;
+
+
+hive (practice)> SELECT m8.Origin,m8.Dest,m7.Origin,m7.Dest FROM myFlightinfo2008 m8 FULL OUTER JOIN myFlightinfo2007 m7 ON m8.Month=m7.Month;
+
+hive (practice)> SELECT  m8.Year,m8.Month,m8.Origin,m8.Dest,m7.Year,m7.Month,m7.Origin,m7.Dest FROM myFlightinfo2008 m8 LEFT OUTER JOIN myFlightinfo2007 m7 ON m8.month=m7.month;
+
+hive (practice)> CREATE INDEX f08_index ON TABLE flightinfo2008 (Origin) AS
+               > 'COMPACT' WITH DEFERRED REBUILD;
+
+hive (practice)> SELECT * FROM myFlightInfo2008;
+
+
+hive (practice)> ALTER INDEX f08_index ON flightinfo2008 REBUILD;
+
+
+hive (practice)> SHOW INDEXES ON FlightInfo2008;
+
+
+
+hive (practice)> SELECT Origin, COUNT(1) FROM
+               > flightinfo2008 WHERE Origin = 'SYR' GROUP BY Origin;
